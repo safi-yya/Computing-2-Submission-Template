@@ -1,11 +1,97 @@
-body {
-    background-image: url("assets/piratebackground.jpg");
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center 10% center;
-  }
+:root
+{
+    --header-bar-height: 96px;
+    --header-font-size: 32pt;
+    --sidebar-width: 250px;
+    --border-width: 2px;
+    --border-colour: white;
+}
+ 
+body
+{
+    background-color: rgb(239, 255, 22);
+}
 
-a {
-    color: green
-  } 
-  
+main
+{
+    background-color: rgb(181 201 218);
+
+    position: absolute;
+    left: var(--sidebar-width);
+    right: var(--sidebar-width);
+    top: var(--header-bar-height);
+    height: calc(100% - var(--header-bar-height));
+    width: calc(100% - 2 * var(--sidebar-width));
+
+    display: flex;              /* enable flexbox */
+    justify-content: center;    /* center horizontally */
+    align-items: center;        /* center vertically */
+}
+
+aside {
+    background-color: rgb(119 98 88);
+    position: absolute;
+    width: var(--sidebar-width);
+    top: var(--header-bar-height);
+    height: calc(100% - var(--header-bar-height));
+}
+
+#home_player {
+  left: 0;
+}
+
+#away_player {
+  right: 0;
+}
+
+header
+{
+    background-color: rgb(64 89 173);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--header-bar-height);
+}
+
+h1
+{
+    font-size: var(--header-font-size);
+    color: rgb(255 248 240);
+}
+
+.grid-container
+{
+    background-color: rgb(181 201 218);
+    aspect-ratio: 1;
+    max-height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-height: 100%;
+    max-width: 100%;
+}
+
+table
+{
+    border-collapse: collapse;
+    width: 90vmin;
+    height: 100%;
+    aspect-ratio: 1/1;
+    line-height: 0;
+    margin-left: auto;
+    margin-right: auto;
+    max-height: 100%;
+    max-width: 100%;
+    position: relative;
+}
+
+td
+{
+    border: 1px solid rgb(255 248 240);
+}
+
+.selected {
+  outline: 3px solid gold;
+  box-shadow: 0 0 10px gold;
+  border-radius: 6px;
+}
