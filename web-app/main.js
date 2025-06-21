@@ -4,7 +4,7 @@ import candycrush from "./candycrush.js";
 const row_count = 8;
 const col_count = 8;
 const candies = {
-  1: "url(./assets/hook.png)",
+  1: "url(./assets/ship.png)",
   2: "url(./assets/map.png)",
   3: "url(./assets/parrot.png)",
   4: "url(./assets/hat.png)",
@@ -57,6 +57,7 @@ const board = candy_grid.map(function (row, row_index) {
     } else {
       if (candycrush.isAdjacent(firstSelected, td)) {
         candycrush.swapCandies(firstSelected, td, candy_grid);
+        candycrush.handleMatchesAndCascade(board, candy_grid, candies);
       }
 
     // Deselect both after attempt to swap
@@ -64,7 +65,13 @@ const board = candy_grid.map(function (row, row_index) {
       td.classList.remove("selected");
       firstSelected = null;
     }
+  const newGrid = candycrush.removeMatches(candy_grid);
+  
 
+  candycrush.updateBoardVisuals(board, newGrid, candies);
+
+// Update your grid reference
+candy_grid.splice(0, candy_grid.length, ...newGrid);
   };
 
     tr.append(td);
