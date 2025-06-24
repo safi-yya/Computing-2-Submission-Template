@@ -21,9 +21,10 @@ const candies = {
   15: "url(./assets/parrotvert.png)",
   16: "url(./assets/hatvert.png)",
   17: "url(./assets/bottlevert.png)",
-  18: "url(./assets/treasurevert.png)",
-
+  18: "url(./assets/treasurevert.png)"
 };
+
+const explosion = "url(./assets/explosion.png)";
 
 const candy_grid = [
   [1,1,2,3,4,1,1,4],
@@ -40,16 +41,17 @@ const grid = document.getElementById("grid");
 
 let firstSelected = null;
 
-let gameState = { score: 0 };
+let gameState = {
+  score: { 1: 0, 2: 0 },
+  currentPlayer: 1,
+  gameOver: false
+};
+
 
 // random candy
 const randomCandy = function () {
   return Math.floor(Math.random() * 6) + 1;
 };
-
-
-// FUNCTIONS NOT MOVED YET GO HERE
-
 
 /*Generate our gorgeous candy board depending on start grid*/
 
@@ -83,7 +85,8 @@ const board = candy_grid.map(function (row, row_index) {
         candycrush.swapCandies(firstSelected, td, candy_grid);
 
         // Handle cascade & matches
-        await candycrush.resolveMatches(candy_grid, board, candies, gameState, randomCandy);
+        await candycrush.resolveMatches(candy_grid, board, candies, gameState, randomCandy, explosion);
+        candycrush.switchPlayerTurn(gameState);
       }
 
       // Deselect both

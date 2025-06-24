@@ -3,6 +3,14 @@ import R from "./ramda.js";
 const candycrush = Object.create(null);
 
 // WORKING FUNCTIONS
+/**
+ * Swaps the candies 
+ * @memberof candycrush
+ * @function
+ * @param {number} td1 the grid position of the first candy
+ * @param {number} td2 the grid position of the second candy
+ * @returns {idk} idk
+ */
 candycrush.swapCandies = function (td1, td2, grid) {
   const bg1 = td1.style.backgroundImage;
   const bg2 = td2.style.backgroundImage;
@@ -24,6 +32,14 @@ candycrush.swapCandies = function (td1, td2, grid) {
   grid[row2][col2] = temp;
 };
 
+/**
+ * Swaps the candies 
+ * @memberof candycrush
+ * @function
+ * @param {number} td1 the grid position of the first candy
+ * @param {number} td2 the grid position of the second candy
+ * @returns {idk} idk
+ */
 candycrush.isAdjacent = function(td1, td2) {
   const id1 = td1.dataset.position.split(",").map(Number);
   const id2 = td2.dataset.position.split(",").map(Number);
@@ -34,7 +50,7 @@ candycrush.isAdjacent = function(td1, td2) {
   const colDiff = Math.abs(col1 - col2);
 
   return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-}
+};
 
 // MATCH FUNCTIONS
 
@@ -45,29 +61,7 @@ candycrush.isAdjacent = function(td1, td2) {
  * @private
  */
 
-// player_has_win_in_column
-/* const three_matched_in_row = function (candy) {
-    return function (row) {
-        return R.includes(
-            [candy, candy, candy],
-            R.aperture(3, row)
-        );
-    };
-};
-
-// player_has_vertical_win
-const horizontal_match_of_three = function (candy, grid) {
-    return R.any(three_matched_in_row(candy), grid);
-};
-
-//player_has_horizontal_win
-const vertical_match_of_three = function (candy, grid) {
-    return R.any(three_matched_in_row(candy), R.transpose(grid));
-}; */
-
-
 // ARE YA WINNNING SON
-
 
 // REMOVE FUNCTIONS
 
@@ -182,15 +176,25 @@ candycrush.matchPositions = function (grid) {
 
 // update score :P
 const updateScoreDisplay = (gameState) => {
-  document.getElementById("score-display").textContent = `Score: ${gameState.score}`;
-  console.log(`Score updated: ${gameState.score}`);
+  document.getElementById("score-display1").textContent = `Score: ${gameState.score[1]}`;
+  console.log(`Score 1 updated: ${gameState.score[1]}`);
+  document.getElementById("score-display2").textContent = `Score: ${gameState.score[2]}`;
+  console.log(`Score 2 updated: ${gameState.score[2]}`);
 };
 
 // ===== Resolve Matches with Delay (for animation cycle) =====
-candycrush.resolveMatches = async function (grid, board, candies, gameState, randomCandy) {
+candycrush.resolveMatches = async function (grid, board, candies, gameState, randomCandy, explosion) {
   while (true) {
     const matches = candycrush.matchPositions(grid);
-    if (matches.length === 0) break;
+    if (matches.length === 0) break; // FIX MATCH LENGTH
+
+    matches.forEach(([r, c]) => {
+      const cell = board[r][c];
+      cell.style.backgroundImage = explosion;
+    });
+
+    // Wait before removing
+    await sleep(250);
 
     const removed = removeMatchedPositions(grid, matches);
     const cascaded = cascadeGrid(removed);
@@ -202,42 +206,21 @@ candycrush.resolveMatches = async function (grid, board, candies, gameState, ran
     await sleep(200); // Delay between each resolution pass
     
     // update score
-    gameState.score += 10;
+    gameState.score[gameState.currentPlayer] += 10;
     updateScoreDisplay(gameState);
+    
+    // check if player has 250 points
+    if (gameState.score[gameState.currentPlayer] >= 250) {
+      gameState.gameOver = true;
+      alert(`Player ${gameState.currentPlayer} wins!`);
+      return;
+    }
   }
 };
 
-// ===== Animate Cascade Step-by-Step =====
-candycrush.animateCascade = async function (grid, board, candies) {
-  const rowCount = grid.length;
-  const colCount = grid[0].length;
-
-  for (let col = 0; col < colCount; col++) {
-    for (let row = rowCount - 2; row >= 0; row--) {
-      let target = row;
-      while (target + 1 < rowCount && grid[target + 1][col] === null) {
-        target++;
-      }
-
-      if (target !== row) {
-        // Move candy in grid
-        grid[target][col] = grid[row][col];
-        grid[row][col] = null;
-
-        // Move candy visually
-        const tdFrom = board[row][col];
-        const tdTo = board[target][col];
-
-        tdTo.className = tdFrom.className;
-        tdTo.style.backgroundImage = tdFrom.style.backgroundImage;
-
-        tdFrom.className = "";
-        tdFrom.style.backgroundImage = "";
-
-        await sleep(100);
-      }
-    }
-  }
+candycrush.switchPlayerTurn = function (gameState) {
+  gameState.currentPlayer = (gameState.currentPlayer === 1) ? 2 : 1;
+  //updatePlayerDisplay(gameState.currentPlayer);
 };
 
 
@@ -288,4 +271,3 @@ candycrush.parrot = 1;
 candycrush.treasure = 2;
 
 export default Object.freeze(candycrush);
-
