@@ -46,7 +46,7 @@ candycrush.isAdjacent = function(td1, td2) {
  */
 
 // player_has_win_in_column
-const three_matched_in_row = function (candy) {
+/* const three_matched_in_row = function (candy) {
     return function (row) {
         return R.includes(
             [candy, candy, candy],
@@ -63,18 +63,11 @@ const horizontal_match_of_three = function (candy, grid) {
 //player_has_horizontal_win
 const vertical_match_of_three = function (candy, grid) {
     return R.any(three_matched_in_row(candy), R.transpose(grid));
-};
+}; */
 
 
 // ARE YA WINNNING SON
 
-//Connect4.is_winning_for_player
-candycrush.is_matched_for_candy = function (candy, grid) {
-    return (
-        horizontal_match_of_three(candy, grid) ||
-        vertical_match_of_three(candy, grid)
-    );
-};
 
 // REMOVE FUNCTIONS
 
@@ -151,13 +144,16 @@ candycrush.updateBoardVisuals = function (board, grid, candies) {
   });
 };
 
-// cascade
+// ===== Utility =====
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-// After matches have been removed (cells set to null)
-const cascadeGrid = (grid) =>
+// ===== Cascade Logic =====
+const cascadeGrid = grid =>
   R.pipe(
-    R.transpose, // Work column by column
-    R.map((col) => {
+    R.transpose,
+    R.map(col => {
       const nonNulls = R.filter(R.complement(R.isNil), col);
       const missing = R.repeat(null, col.length - nonNulls.length);
       return R.concat(missing, nonNulls); // Push nulls to top
@@ -165,58 +161,85 @@ const cascadeGrid = (grid) =>
     R.transpose
   )(grid);
 
-// Fill in new random candies where nulls remain
-/* candycrush.fillNewCandies = function (grid, maxCandy) {
+// ===== Candy Fill =====
+candycrush.fillNewCandies = function (grid, randomCandy) {
   return R.map(
-    R.map(cell => cell === null ? R.random(1, maxCandy) : cell),
-    grid
-  );
-}; */
-
-candycrush.fillNewCandies = function (grid, maxCandy) {
-  return R.map(
-    R.map(cell => cell === null ? 1 : cell),
+    row => R.map(
+      cell => (cell === null ? randomCandy() : cell),
+      row
+    ),
     grid
   );
 };
 
+
+// ===== Match Detection =====
 candycrush.matchPositions = function (grid) {
   const h = horizontal_match_positions(grid);
   const v = vertical_match_positions(grid);
   return R.uniqWith(R.equals, R.concat(h, v));
 };
 
-candycrush.handleMatchesAndCascade = function (board, grid, candies) {
-  const matches = candycrush.matchPositions(grid);
-  if (matches.length === 0) return; // No match, no update
-
-  // Step 1: Remove matched positions (set to null)
-  const gridWithoutMatches = removeMatchedPositions(grid, matches);
-
-  // Step 2: Cascade (let non-null values fall down)
-  const cascadedGrid = cascadeGrid(gridWithoutMatches);
-
-  // Step 3: Fill with new candies
-  const refilledGrid = candycrush.fillNewCandies(cascadedGrid, Object.keys(candies).length);
-
-  // Step 4: Update the DOM to reflect the new grid
-  candycrush.updateBoardVisuals(board, refilledGrid, candies);
-
-  // Step 5: Sync the original grid
-  grid.splice(0, grid.length, ...refilledGrid);
+// update score :P
+const updateScoreDisplay = (gameState) => {
+  document.getElementById("score-display").textContent = `Score: ${gameState.score}`;
+  console.log(`Score updated: ${gameState.score}`);
 };
 
-/* 
-const removeMatches = (grid, matches) => {
-  // Convert list of [row, col] into a Set of string keys for fast lookup
-  const matchSet = new Set(matches.map(([r, c]) => `${r},${c}`));
+// ===== Resolve Matches with Delay (for animation cycle) =====
+candycrush.resolveMatches = async function (grid, board, candies, gameState, randomCandy) {
+  while (true) {
+    const matches = candycrush.matchPositions(grid);
+    if (matches.length === 0) break;
 
-  return R.addIndex(R.map)((row, rowIndex) =>
-    R.addIndex(R.map)((cell, colIndex) =>
-      matchSet.has(`${rowIndex},${colIndex}`) ? null : cell
-    )(row)
-  )(grid);
-}; */
+    const removed = removeMatchedPositions(grid, matches);
+    const cascaded = cascadeGrid(removed);
+    const refilled = candycrush.fillNewCandies(cascaded, randomCandy);
+
+    candycrush.updateBoardVisuals(board, refilled, candies);
+    grid.splice(0, grid.length, ...refilled);
+
+    await sleep(200); // Delay between each resolution pass
+    
+    // update score
+    gameState.score += 10;
+    updateScoreDisplay(gameState);
+  }
+};
+
+// ===== Animate Cascade Step-by-Step =====
+candycrush.animateCascade = async function (grid, board, candies) {
+  const rowCount = grid.length;
+  const colCount = grid[0].length;
+
+  for (let col = 0; col < colCount; col++) {
+    for (let row = rowCount - 2; row >= 0; row--) {
+      let target = row;
+      while (target + 1 < rowCount && grid[target + 1][col] === null) {
+        target++;
+      }
+
+      if (target !== row) {
+        // Move candy in grid
+        grid[target][col] = grid[row][col];
+        grid[row][col] = null;
+
+        // Move candy visually
+        const tdFrom = board[row][col];
+        const tdTo = board[target][col];
+
+        tdTo.className = tdFrom.className;
+        tdTo.style.backgroundImage = tdFrom.style.backgroundImage;
+
+        tdFrom.className = "";
+        tdFrom.style.backgroundImage = "";
+
+        await sleep(100);
+      }
+    }
+  }
+};
+
 
 
  // OLD STUFF

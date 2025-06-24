@@ -9,7 +9,20 @@ const candies = {
   3: "url(./assets/parrot.png)",
   4: "url(./assets/hat.png)",
   5: "url(./assets/bottle.png)",
-  6: "url(./assets/treasure.png)"
+  6: "url(./assets/treasure.png)",
+  7: "url(./assets/shiphoriz.png)",
+  8: "url(./assets/maphoriz.png)",
+  9: "url(./assets/parrothoriz.png)",
+  10: "url(./assets/hathoriz.png)",
+  11: "url(./assets/bottlehoriz.png)",
+  12: "url(./assets/treasurehoriz.png)",
+  13: "url(./assets/shipvert.png)",
+  14: "url(./assets/mapvert.png)",
+  15: "url(./assets/parrotvert.png)",
+  16: "url(./assets/hatvert.png)",
+  17: "url(./assets/bottlevert.png)",
+  18: "url(./assets/treasurevert.png)",
+
 };
 
 const candy_grid = [
@@ -24,7 +37,15 @@ const candy_grid = [
 ];
 
 const grid = document.getElementById("grid");
+
 let firstSelected = null;
+
+let gameState = { score: 0 };
+
+// random candy
+const randomCandy = function () {
+  return Math.floor(Math.random() * 6) + 1;
+};
 
 
 // FUNCTIONS NOT MOVED YET GO HERE
@@ -33,7 +54,6 @@ let firstSelected = null;
 /*Generate our gorgeous candy board depending on start grid*/
 
 const board = candy_grid.map(function (row, row_index) {
-
   const tr = document.createElement("tr");
   grid.append(tr);
 
@@ -46,33 +66,31 @@ const board = candy_grid.map(function (row, row_index) {
     td.dataset.position = `${row_index},${col_index}`;
 
     // Click to select or swap
-    td.onclick = function () {
-    if (!firstSelected) {
-      firstSelected = td;
-      td.classList.add("selected");
-    } else if (td === firstSelected) {
-      // Deselect if clicked again
-      td.classList.remove("selected");
-      firstSelected = null;
-    } else {
-      if (candycrush.isAdjacent(firstSelected, td)) {
-        candycrush.swapCandies(firstSelected, td, candy_grid);
-        candycrush.handleMatchesAndCascade(board, candy_grid, candies);
+    td.onclick = async function () {
+      if (!firstSelected) {
+        firstSelected = td;
+        td.classList.add("selected");
+        return;
       }
 
-    // Deselect both after attempt to swap
+      if (td === firstSelected) {
+        td.classList.remove("selected");
+        firstSelected = null;
+        return;
+      }
+
+      if (candycrush.isAdjacent(firstSelected, td)) {
+        candycrush.swapCandies(firstSelected, td, candy_grid);
+
+        // Handle cascade & matches
+        await candycrush.resolveMatches(candy_grid, board, candies, gameState, randomCandy);
+      }
+
+      // Deselect both
       firstSelected.classList.remove("selected");
       td.classList.remove("selected");
       firstSelected = null;
-    }
-  const newGrid = candycrush.removeMatches(candy_grid);
-  
-
-  candycrush.updateBoardVisuals(board, newGrid, candies);
-
-// Update your grid reference
-candy_grid.splice(0, candy_grid.length, ...newGrid);
-  };
+    };
 
     tr.append(td);
     return td;
