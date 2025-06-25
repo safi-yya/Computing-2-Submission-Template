@@ -87,6 +87,7 @@ header a
     color: var(--sidebar-colour);
     position: absolute;
     right: 1em;
+    color: rgb(255 248 240);
 }
 
 .grid-container

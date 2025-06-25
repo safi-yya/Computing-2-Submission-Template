@@ -4,12 +4,11 @@ const candycrush = Object.create(null);
 
 // WORKING FUNCTIONS
 /**
- * Swaps the candies 
+ * Swaps the candies
  * @memberof candycrush
  * @function
  * @param {number} td1 the grid position of the first candy
  * @param {number} td2 the grid position of the second candy
- * @returns {idk} idk
  */
 candycrush.swapCandies = function (td1, td2, grid) {
   const bg1 = td1.style.backgroundImage;
@@ -38,7 +37,7 @@ candycrush.swapCandies = function (td1, td2, grid) {
  * @function
  * @param {number} td1 the grid position of the first candy
  * @param {number} td2 the grid position of the second candy
- * @returns {idk} idk
+ * @returns {boolean} If the two candies are adjacent
  */
 candycrush.isAdjacent = function(td1, td2) {
   const id1 = td1.dataset.position.split(",").map(Number);
@@ -53,19 +52,18 @@ candycrush.isAdjacent = function(td1, td2) {
 };
 
 // MATCH FUNCTIONS
-
-/**
- * 
- * curried
- * @sig bleh
- * @private
- */
-
 // ARE YA WINNNING SON
 
 // REMOVE FUNCTIONS
 
 // Returns an array of [row, col] positions for horizontal matches of 3
+/**
+ * Checks for horizontal matches of 3 candies
+ * @memberof candycrush
+ * @function
+ * @param {candycrush.grid} grid the grid position of the first candy
+ * @returns {array} Coordinate pairs of matched candies in the grid
+ */
 const horizontal_match_positions = function (grid) {
   return R.addIndex(R.chain)((row, rowIndex) =>
     R.addIndex(R.chain)((_, colIndex) => {
@@ -168,7 +166,7 @@ candycrush.fillNewCandies = function (grid, randomCandy) {
 
 
 // ===== Match Detection =====
-candycrush.matchPositions = function (grid) {
+const matchPositions = function (grid) {
   const h = horizontal_match_positions(grid);
   const v = vertical_match_positions(grid);
   return R.uniqWith(R.equals, R.concat(h, v));
@@ -182,15 +180,22 @@ const updateScoreDisplay = (gameState) => {
   console.log(`Score 2 updated: ${gameState.score[2]}`);
 };
 
+const countMatches = function (grid) {
+  return matchPositions(grid).length;
+};
+
 // ===== Resolve Matches with Delay (for animation cycle) =====
 candycrush.resolveMatches = async function (grid, board, candies, gameState, randomCandy, explosion) {
   while (true) {
-    const matches = candycrush.matchPositions(grid);
-    if (matches.length === 0) break; // FIX MATCH LENGTH
+    const matches = matchPositions(grid); // <-- FIX: get the actual matched positions array
+    console.log("Matches found:", matches.length);
+    if (matches.length === 0) break;
 
     matches.forEach(([r, c]) => {
       const cell = board[r][c];
-      cell.style.backgroundImage = explosion;
+      if (cell) {
+        cell.style.backgroundImage = explosion;
+      }
     });
 
     // Wait before removing
@@ -203,13 +208,13 @@ candycrush.resolveMatches = async function (grid, board, candies, gameState, ran
     candycrush.updateBoardVisuals(board, refilled, candies);
     grid.splice(0, grid.length, ...refilled);
 
-    await sleep(200); // Delay between each resolution pass
-    
+    await sleep(200);
+
     // update score
-    gameState.score[gameState.currentPlayer] += 10;
+    gameState.score[gameState.currentPlayer] += matches.length * 10; // Optional: scale by matches
     updateScoreDisplay(gameState);
-    
-    // check if player has 250 points
+
+    // check for win
     if (gameState.score[gameState.currentPlayer] >= 250) {
       gameState.gameOver = true;
       alert(`Player ${gameState.currentPlayer} wins!`);
@@ -218,56 +223,10 @@ candycrush.resolveMatches = async function (grid, board, candies, gameState, ran
   }
 };
 
+
 candycrush.switchPlayerTurn = function (gameState) {
   gameState.currentPlayer = (gameState.currentPlayer === 1) ? 2 : 1;
-  //updatePlayerDisplay(gameState.currentPlayer);
 };
 
-
-
- // OLD STUFF
-/**
- * Create a new empty board.
- * Optionally with a specified width and height,
- * otherwise returns a standard 7 wide, 6 high board.
- * @memberof Connect4
- * @function
- * @param {number} [width = 8] The width of the new board.
- * @param {number} [height = 8] The height of the new board.
- * @returns {Connect4.Board} An empty board for starting a game.
- */
-
-
-/**
- * @returns candycrush.Grid
- * @param {*} icon1 
- * @param {*} icon2 
- */
-candycrush.swap = function (icon1, icon2, grid) {
-};
-
-/**
- * @returns candycrush.Player
- */
-candycrush.player_to_ply = function () {
-};
-
-/**
- * @returns Boolean
- */
-candycrush.is_game_ended = function (grid) {
-};
-
-candycrush.is_game_won = function (grid) {
-
-};
-candycrush.is_game_won_for_player = function (player) {
-    return function (grid){
-
-    };
-};
-
-candycrush.parrot = 1;
-candycrush.treasure = 2;
 
 export default Object.freeze(candycrush);
